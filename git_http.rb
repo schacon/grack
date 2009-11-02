@@ -2,7 +2,6 @@ require 'zlib'
 require 'rack/request'
 require 'rack/response'
 require 'rack/utils'
-require 'pp'
 
 class GitHttp
   class App 
@@ -87,6 +86,7 @@ class GitHttp
     end
 
     def dumb_info_refs
+      update_server_info
       send_file(@reqfile, "text/plain; charset=utf-8") do
         hdr_nocache
       end
@@ -217,6 +217,10 @@ class GitHttp
       else
         input = @req.body.read
       end
+    end
+
+    def update_server_info
+      `git update-server-info`
     end
 
     # --------------------------------------
