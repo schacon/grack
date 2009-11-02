@@ -7,17 +7,17 @@ class GitHttp
   class App 
 
     SERVICES = [
-      ["GET",  "/HEAD$", 'get_text_file'],
-      ["GET",  "/info/refs$", 'get_info_refs'],
-      ["GET",  "/objects/info/alternates$", 'get_text_file'],
-      ["GET",  "/objects/info/http-alternates$", 'get_text_file'],
-      ["GET",  "/objects/info/packs$", 'get_info_packs'],
-      ["GET",  "/objects/info/[^/]*$", 'get_text_file'],
-      ["GET",  "/objects/[0-9a-f]{2}/[0-9a-f]{38}$", 'get_loose_object'],
-      ["GET",  "/objects/pack/pack-[0-9a-f]{40}\\.pack$", 'get_pack_file'],
-      ["GET",  "/objects/pack/pack-[0-9a-f]{40}\\.idx$", 'get_idx_file'],
-      ["POST", "/git-upload-pack$", 'service_rpc', 'upload-pack'],
-      ["POST", "/git-receive-pack$", 'service_rpc', 'receive-pack']
+      ["GET",  "(.*?)/HEAD$", 'get_text_file'],
+      ["GET",  "(.*?)/info/refs$", 'get_info_refs'],
+      ["GET",  "(.*?)/objects/info/alternates$", 'get_text_file'],
+      ["GET",  "(.*?)/objects/info/http-alternates$", 'get_text_file'],
+      ["GET",  "(.*?)/objects/info/packs$", 'get_info_packs'],
+      ["GET",  "(.*?)/objects/info/[^/]*$", 'get_text_file'],
+      ["GET",  "(.*?)/objects/[0-9a-f]{2}/[0-9a-f]{38}$", 'get_loose_object'],
+      ["GET",  "(.*?)/objects/pack/pack-[0-9a-f]{40}\\.pack$", 'get_pack_file'],
+      ["GET",  "(.*?)/objects/pack/pack-[0-9a-f]{40}\\.idx$", 'get_idx_file'],
+      ["POST", "(.*?)/git-upload-pack$", 'service_rpc', 'upload-pack'],
+      ["POST", "(.*?)/git-receive-pack$", 'service_rpc', 'receive-pack']
     ]
 
     def initialize(config)
@@ -29,18 +29,20 @@ class GitHttp
       @req = Rack::Request.new(env)
 
       cmd = nil
+      path = nil
       SERVICES.each do |method, match, handler, rpc|
-        if Regexp.new(match).match(@req.path)
+        if m = Regexp.new(match).match(@req.path)
           return render_method_not_allowed if method != @req.request_method
           cmd = handler
           @rpc = rpc
+          path = m[1]
         end
       end
 
       return render_not_found if !cmd
 
       # TODO: get git directory
-      if @dir = get_git_dir
+      if @dir = get_git_dir(path)
         Dir.chdir(@dir) do
           self.method(cmd).call()
         end
@@ -54,6 +56,8 @@ class GitHttp
     # ------------------------
 
     def service_rpc
+
+      # TODO: check receive-pack access
       
       if @env["HTTP_CONTENT_ENCODING"] =~ /gzip/
         input = Zlib::GzipReader.new(@req.body).read
@@ -61,11 +65,7 @@ class GitHttp
         input = @req.body.read
       end
       
-      ## TODO: check @req.content_type # application/x-git-%s-request
-
-      pp @env
-      pp input
-      #puts input
+      # TODO: check @req.content_type # application/x-git-%s-request
       
       @res = Rack::Response.new
       @res.status = 200
@@ -83,36 +83,44 @@ class GitHttp
 
     def get_info_refs
       service_name = get_service_type
-      return render_method_not_allowed if !service_name
+      if service_name
+        refs = `git #{service_name} --stateless-rpc --advertise-refs .`
 
-      refs = `git #{service_name} --stateless-rpc --advertise-refs .`
-
-      @res = Rack::Response.new
-      @res.status = 200
-      @res["Content-Type"] = "application/x-git-%s-advertisement" % service_name
-      hdr_nocache
-      @res.write(pkt_write("# service=git-#{service_name}\n"))
-      @res.write(pkt_flush)
-      @res.write(refs)
-      @res.finish
+        @res = Rack::Response.new
+        @res.status = 200
+        @res["Content-Type"] = "application/x-git-%s-advertisement" % service_name
+        hdr_nocache
+        @res.write(pkt_write("# service=git-#{service_name}\n"))
+        @res.write(pkt_flush)
+        @res.write(refs)
+        @res.finish
+      else
+        # TODO: old info_refs functionality
+      end
     end
 
     def get_info_packs
-    end
-
-    def get_text_file
+      # "text/plain; charset=utf-8"
     end
 
     def get_loose_object
+      #hdr_cache_forever();
+      #send_file("application/x-git-loose-object", name);
     end
 
     def get_pack_file
+      #hdr_cache_forever();
+      #send_file("application/x-git-packed-objects", name);
     end
 
     def get_idx_file
+      #hdr_cache_forever();
+      #send_file("application/x-git-packed-objects-toc", name);
     end
 
     def get_text_file
+      #hdr_nocache();
+      #send_file("text/plain", name);
     end
 
 
@@ -120,9 +128,13 @@ class GitHttp
     # logic helping functions
     # ------------------------
 
-    def get_git_dir
-      "/opt/schacon/grit/.git" # TODO : should be obvious
-      "/Users/schacon/projects/git/.git"
+    def get_git_dir(path)
+      root = @config[:project_root] || `pwd`
+      path = File.join(root, path)
+      if File.exists?(path) # TODO: check is a valid git directory
+        return path
+      end
+      false
     end
 
     def get_service_type
