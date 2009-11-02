@@ -7,17 +7,18 @@ class GitHttp
   class App 
 
     SERVICES = [
-      ["GET",  "(.*?)/HEAD$", 'get_text_file'],
-      ["GET",  "(.*?)/info/refs$", 'get_info_refs'],
-      ["GET",  "(.*?)/objects/info/alternates$", 'get_text_file'],
-      ["GET",  "(.*?)/objects/info/http-alternates$", 'get_text_file'],
-      ["GET",  "(.*?)/objects/info/packs$", 'get_info_packs'],
-      ["GET",  "(.*?)/objects/info/[^/]*$", 'get_text_file'],
-      ["GET",  "(.*?)/objects/[0-9a-f]{2}/[0-9a-f]{38}$", 'get_loose_object'],
-      ["GET",  "(.*?)/objects/pack/pack-[0-9a-f]{40}\\.pack$", 'get_pack_file'],
-      ["GET",  "(.*?)/objects/pack/pack-[0-9a-f]{40}\\.idx$", 'get_idx_file'],
-      ["POST", "(.*?)/git-upload-pack$", 'service_rpc', 'upload-pack'],
-      ["POST", "(.*?)/git-receive-pack$", 'service_rpc', 'receive-pack']
+      ["POST", 'service_rpc',      "(.*?)/git-upload-pack$",  'upload-pack'],
+      ["POST", 'service_rpc',      "(.*?)/git-receive-pack$", 'receive-pack']
+
+      ["GET",  'get_info_refs',    "(.*?)/info/refs$"],
+      ["GET",  'get_text_file',    "(.*?)/HEAD$"],
+      ["GET",  'get_text_file',    "(.*?)/objects/info/alternates$"],
+      ["GET",  'get_text_file',    "(.*?)/objects/info/http-alternates$"],
+      ["GET",  'get_info_packs',   "(.*?)/objects/info/packs$"],
+      ["GET",  'get_text_file',    "(.*?)/objects/info/[^/]*$"],
+      ["GET",  'get_loose_object', "(.*?)/objects/[0-9a-f]{2}/[0-9a-f]{38}$"],
+      ["GET",  'get_pack_file',    "(.*?)/objects/pack/pack-[0-9a-f]{40}\\.pack$"],
+      ["GET",  'get_idx_file',     "(.*?)/objects/pack/pack-[0-9a-f]{40}\\.idx$"],      
     ]
 
     def initialize(config)
@@ -30,7 +31,7 @@ class GitHttp
 
       cmd = nil
       path = nil
-      SERVICES.each do |method, match, handler, rpc|
+      SERVICES.each do |method, handler, match, rpc|
         if m = Regexp.new(match).match(@req.path)
           return render_method_not_allowed if method != @req.request_method
           cmd = handler
