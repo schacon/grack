@@ -1,11 +1,13 @@
-$LOAD_PATH.unshift File.expand_path(File.dirname(__FILE__))
+$LOAD_PATH.unshift File.expand_path(File.dirname(__FILE__) + '/lib')
 
 use Rack::ShowExceptions
 
-require 'git_http'
+require 'lib/git_http'
 
 config = {
-  :project_root => ENV['GIT_PROJECT_ROOT'],
+  :project_root => "/opt",
+  :git_path => '/usr/local/libexec/git-core/git',
+  :server_prefix => 'git/',
   :upload_pack => true,
   :receive_pack => true,
 }

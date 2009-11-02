@@ -22,7 +22,7 @@ class GitHttp
     ]
 
     def initialize(config)
-      @config = config
+      @config = config || {}
     end
 
     def call(env)
@@ -30,8 +30,6 @@ class GitHttp
       @req = Rack::Request.new(env)
 
       cmd, path, @reqfile, @rpc = match_routing
-
-      print "f: #{@reqfile}"
 
       return render_method_not_allowed if cmd == 'not_allowed'
       return render_not_found if !cmd
@@ -56,7 +54,8 @@ class GitHttp
       @res.status = 200
       @res["Content-Type"] = "application/x-git-%s-result" % @rpc
       @res.finish do
-        IO.popen("git --git-dir=#{@dir} #{@rpc} --stateless-rpc #{@dir}", File::RDWR) do |pipe|
+        command = git_command("#{@rpc} --stateless-rpc #{@dir}")
+        IO.popen(command, File::RDWR) do |pipe|
           pipe.write(input)
           while !pipe.eof?
             block = pipe.read(8192) # 8M at a time
@@ -66,11 +65,18 @@ class GitHttp
       end
     end
 
+    def git_command(command)
+      git_bin = @config[:git_path] || 'git'
+      puts command = "#{git_bin} #{command}"
+      command
+    end
+
     def get_info_refs
       service_name = get_service_type
 
       if has_access(service_name)
-        refs = `git #{service_name} --stateless-rpc --advertise-refs .`
+        cmd = git_command("#{service_name} --stateless-rpc --advertise-refs .")
+        refs = `#{cmd}`
 
         @res = Rack::Response.new
         @res.status = 200
@@ -184,6 +190,7 @@ class GitHttp
           cmd = handler
           path = m[1]
           file = @req.path.gsub(path + '/', '')
+          path = path.sub(@config[:server_prefix], '') if @config[:server_prefix]
           return [cmd, path, file, rpc]
         end
       end
