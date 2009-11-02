@@ -1,3 +1,8 @@
+require 'zlib'
+require 'rack/request'
+require 'rack/response'
+require 'pp'
+
 class GitHttp
   class App 
 
@@ -11,8 +16,8 @@ class GitHttp
       ["GET",  "/objects/[0-9a-f]{2}/[0-9a-f]{38}$", 'get_loose_object'],
       ["GET",  "/objects/pack/pack-[0-9a-f]{40}\\.pack$", 'get_pack_file'],
       ["GET",  "/objects/pack/pack-[0-9a-f]{40}\\.idx$", 'get_idx_file'],
-      ["POST", "/git-upload-pack$", 'service_rpc'],
-      ["POST", "/git-receive-pack$", 'service_rpc']
+      ["POST", "/git-upload-pack$", 'service_rpc', 'upload-pack'],
+      ["POST", "/git-receive-pack$", 'service_rpc', 'receive-pack']
     ]
 
     def initialize(config)
@@ -20,21 +25,23 @@ class GitHttp
     end
 
     def call(env)
+      @env = env
       @req = Rack::Request.new(env)
 
       cmd = nil
-      SERVICES.each do |method, match, handler|
+      SERVICES.each do |method, match, handler, rpc|
         if Regexp.new(match).match(@req.path)
           return render_method_not_allowed if method != @req.request_method
           cmd = handler
+          @rpc = rpc
         end
       end
 
       return render_not_found if !cmd
 
       # TODO: get git directory
-      if dir = get_git_dir
-        Dir.chdir(dir) do
+      if @dir = get_git_dir
+        Dir.chdir(@dir) do
           self.method(cmd).call()
         end
       else
@@ -47,17 +54,30 @@ class GitHttp
     # ------------------------
 
     def service_rpc
-      input = @req.body.read
+      
+      if @env["HTTP_CONTENT_ENCODING"] =~ /gzip/
+        input = Zlib::GzipReader.new(@req.body).read
+      else
+        input = @req.body.read
+      end
+      
+      ## TODO: check @req.content_type # application/x-git-%s-request
 
-      pp @req.content_type # application/x-git-%s-request
-      pp @req.path
+      pp @env
       pp input
+      #puts input
       
       @res = Rack::Response.new
-      @res["Content-Type"] = "application/x-git-%s-result"
-      @res.status = 500
+      @res.status = 200
+      @res["Content-Type"] = "application/x-git-%s-result" % @rpc
       @res.finish do
-        # test
+        IO.popen("git --git-dir=#{@dir} #{@rpc} --stateless-rpc #{@dir}", File::RDWR) do |pipe|
+          pipe.write(input)
+          while !pipe.eof?
+            block = pipe.read(4016)
+            @res.write block
+          end
+        end
       end
     end
 
@@ -102,6 +122,7 @@ class GitHttp
 
     def get_git_dir
       "/opt/schacon/grit/.git" # TODO : should be obvious
+      "/Users/schacon/projects/git/.git"
     end
 
     def get_service_type
