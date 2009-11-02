@@ -1,6 +1,7 @@
 require 'zlib'
 require 'rack/request'
 require 'rack/response'
+require 'rack/utils'
 require 'pp'
 
 class GitHttp
@@ -29,7 +30,9 @@ class GitHttp
       @env = env
       @req = Rack::Request.new(env)
 
-      cmd, path, @rpc = match_routing
+      cmd, path, @reqfile, @rpc = match_routing
+
+      print "f: #{@reqfile}"
 
       return render_method_not_allowed if cmd == 'not_allowed'
       return render_not_found if !cmd
@@ -57,7 +60,7 @@ class GitHttp
         IO.popen("git --git-dir=#{@dir} #{@rpc} --stateless-rpc #{@dir}", File::RDWR) do |pipe|
           pipe.write(input)
           while !pipe.eof?
-            block = pipe.read(4096) # 4M at a time
+            block = pipe.read(8192) # 8M at a time
             @res.write block        # steam it to the client
           end
         end
@@ -79,38 +82,82 @@ class GitHttp
         @res.write(refs)
         @res.finish
       else
-        # TODO: old info_refs functionality
+        dumb_info_refs
+      end
+    end
+
+    def dumb_info_refs
+      send_file(@reqfile, "text/plain; charset=utf-8") do
+        hdr_nocache
       end
     end
 
     def get_info_packs
-      # "text/plain; charset=utf-8"
+      # objects/info/packs
+      send_file(@reqfile, "text/plain; charset=utf-8") do
+        hdr_nocache
+      end
     end
 
     def get_loose_object
-      #hdr_cache_forever();
-      #send_file("application/x-git-loose-object", name);
+      send_file(@reqfile, "application/x-git-loose-object") do
+        hdr_cache_forever
+      end
     end
 
     def get_pack_file
-      #hdr_cache_forever();
-      #send_file("application/x-git-packed-objects", name);
+      send_file(@reqfile, "application/x-git-packed-objects") do
+        hdr_cache_forever
+      end
     end
 
     def get_idx_file
-      #hdr_cache_forever();
-      #send_file("application/x-git-packed-objects-toc", name);
+      send_file(@reqfile, "application/x-git-packed-objects-toc") do
+        hdr_cache_forever
+      end
     end
 
     def get_text_file
-      #hdr_nocache();
-      #send_file("text/plain", name);
+      send_file(@reqfile, "text/plain") do
+        hdr_nocache
+      end
     end
-
 
     # ------------------------
     # logic helping functions
     # ------------------------
+
+    F = ::File
+
+    # some of this borrowed from the Rack::File implementation
+    def send_file(reqfile, content_type)
+      reqfile = File.join(@dir, reqfile)
+      return render_not_found if !F.exists?(reqfile)
+
+      @res = Rack::Response.new
+      @res.status = 200
+      @res["Content-Type"]  = content_type
+      @res["Last-Modified"] = F.mtime(reqfile).httpdate
+
+      yield
+
+      if size = F.size?(reqfile)
+        @res["Content-Length"] = size.to_s
+        @res.finish do
+          F.open(reqfile, "rb") do |file|
+            while part = file.read(8192)
+              @res.write part
+            end
+          end
+        end
+      else
+        body = [F.read(reqfile)]
+        size = Utils.bytesize(body.first)
+        @res["Content-Length"] = size
+        @res.write body
+        @res.finish
+      end
+    end
 
     def get_git_dir(path)
       root = @config[:project_root] || `pwd`
@@ -123,9 +170,8 @@ class GitHttp
 
     def get_service_type
       service_type = @req.params['service']
-      if service_type[0, 4] != 'git-'
-        return false
-      end
+      return false if !service_type
+      return false if service_type[0, 4] != 'git-'
       service_type.gsub('git-', '')
     end
 
@@ -134,10 +180,11 @@ class GitHttp
       path = nil
       SERVICES.each do |method, handler, match, rpc|
         if m = Regexp.new(match).match(@req.path)
-          return ['not_allowed', nil, nil] if method != @req.request_method
+          return ['not_allowed'] if method != @req.request_method
           cmd = handler
           path = m[1]
-          return [cmd, path, rpc]
+          file = @req.path.gsub(path + '/', '')
+          return [cmd, path, file, rpc]
         end
       end
       return nil
