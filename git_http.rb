@@ -42,9 +42,9 @@ class GitHttp
       end
     end
 
-    def get_git_dir
-      "/opt/schacon/grit/.git"
-    end
+    # ------------------------
+    # actual command handling functions
+    # ------------------------
 
     def service_rpc
       input = @req.body.read
@@ -59,18 +59,6 @@ class GitHttp
       @res.finish do
         # test
       end
-    end
-
-    def get_text_file
-    end
-
-    def get_service_type
-      service_type = @req.params['service']
-      if service_type[0, 4] != 'git-'
-        return false
-      end
-      # TODO: check that the service is allowed
-      service_type.gsub('git-', '')
     end
 
     def get_info_refs
@@ -89,14 +77,6 @@ class GitHttp
       @res.finish
     end
 
-    def pkt_flush
-      '0000'
-    end
-
-    def pkt_write(str)
-      (str.size + 4).to_s(base=16).rjust(4, '0') + str
-    end
-
     def get_info_packs
     end
 
@@ -112,6 +92,32 @@ class GitHttp
     def get_idx_file
     end
 
+    def get_text_file
+    end
+
+
+    # ------------------------
+    # logic helping functions
+    # ------------------------
+
+    def get_git_dir
+      "/opt/schacon/grit/.git" # TODO : should be obvious
+    end
+
+    def get_service_type
+      service_type = @req.params['service']
+      if service_type[0, 4] != 'git-'
+        return false
+      end
+      # TODO: check that the service is allowed
+      service_type.gsub('git-', '')
+    end
+
+
+    # ------------------------
+    # HTTP error response handling functions
+    # ------------------------
+
     PLAIN_TYPE = {"Content-Type" => "text/plain"}
 
     def render_method_not_allowed
@@ -125,6 +131,24 @@ class GitHttp
     def render_not_found
       [404, PLAIN_TYPE, ["Not Found"]]
     end
+
+
+    # ------------------------
+    # packet-line handling functions
+    # ------------------------
+
+    def pkt_flush
+      '0000'
+    end
+
+    def pkt_write(str)
+      (str.size + 4).to_s(base=16).rjust(4, '0') + str
+    end
+
+
+    # ------------------------
+    # header writing functions
+    # ------------------------
 
     def hdr_nocache
       @res["Expires"] = "Fri, 01 Jan 1980 00:00:00 GMT"
