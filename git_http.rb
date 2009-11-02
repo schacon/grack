@@ -8,7 +8,7 @@ class GitHttp
 
     SERVICES = [
       ["POST", 'service_rpc',      "(.*?)/git-upload-pack$",  'upload-pack'],
-      ["POST", 'service_rpc',      "(.*?)/git-receive-pack$", 'receive-pack']
+      ["POST", 'service_rpc',      "(.*?)/git-receive-pack$", 'receive-pack'],
 
       ["GET",  'get_info_refs',    "(.*?)/info/refs$"],
       ["GET",  'get_text_file',    "(.*?)/HEAD$"],
@@ -29,45 +29,27 @@ class GitHttp
       @env = env
       @req = Rack::Request.new(env)
 
-      cmd = nil
-      path = nil
-      SERVICES.each do |method, handler, match, rpc|
-        if m = Regexp.new(match).match(@req.path)
-          return render_method_not_allowed if method != @req.request_method
-          cmd = handler
-          @rpc = rpc
-          path = m[1]
-        end
-      end
+      cmd, path, @rpc = match_routing
 
+      return render_method_not_allowed if cmd == 'not_allowed'
       return render_not_found if !cmd
 
-      # TODO: get git directory
-      if @dir = get_git_dir(path)
-        Dir.chdir(@dir) do
-          self.method(cmd).call()
-        end
-      else
-        return render_not_found
+      @dir = get_git_dir(path)
+      return render_not_found if !@dir
+
+      Dir.chdir(@dir) do
+        self.method(cmd).call()
       end
     end
 
-    # ------------------------
+    # ---------------------------------
     # actual command handling functions
-    # ------------------------
+    # ---------------------------------
 
     def service_rpc
+      return render_no_access if !has_access(@rpc, true)
+      input = read_body
 
-      # TODO: check receive-pack access
-      
-      if @env["HTTP_CONTENT_ENCODING"] =~ /gzip/
-        input = Zlib::GzipReader.new(@req.body).read
-      else
-        input = @req.body.read
-      end
-      
-      # TODO: check @req.content_type # application/x-git-%s-request
-      
       @res = Rack::Response.new
       @res.status = 200
       @res["Content-Type"] = "application/x-git-%s-result" % @rpc
@@ -75,8 +57,8 @@ class GitHttp
         IO.popen("git --git-dir=#{@dir} #{@rpc} --stateless-rpc #{@dir}", File::RDWR) do |pipe|
           pipe.write(input)
           while !pipe.eof?
-            block = pipe.read(4016)
-            @res.write block
+            block = pipe.read(4096) # 4M at a time
+            @res.write block        # steam it to the client
           end
         end
       end
@@ -84,7 +66,8 @@ class GitHttp
 
     def get_info_refs
       service_name = get_service_type
-      if service_name
+
+      if has_access(service_name)
         refs = `git #{service_name} --stateless-rpc --advertise-refs .`
 
         @res = Rack::Response.new
@@ -143,14 +126,55 @@ class GitHttp
       if service_type[0, 4] != 'git-'
         return false
       end
-      # TODO: check that the service is allowed
       service_type.gsub('git-', '')
     end
 
+    def match_routing
+      cmd = nil
+      path = nil
+      SERVICES.each do |method, handler, match, rpc|
+        if m = Regexp.new(match).match(@req.path)
+          return ['not_allowed', nil, nil] if method != @req.request_method
+          cmd = handler
+          path = m[1]
+          return [cmd, path, rpc]
+        end
+      end
+      return nil
+    end
 
-    # ------------------------
+    def has_access(rpc, check_content_type = false)
+      if check_content_type
+        return false if @req.content_type != "application/x-git-%s-request" % rpc
+      end
+      return false if !['upload-pack', 'receive-pack'].include? rpc
+      return true  if @config[:receive_pack] && rpc == 'receive-pack'
+      return true  if @config[:upload_pack]  && rpc == 'upload-pack'
+      return get_config_setting(rpc)
+      true
+    end
+
+    def get_config_setting(service_name)
+      service_name = service_name.gsub('-', '')
+      setting = `git config http.#{service_name}`.chomp
+      if service_name == 'uploadpack'
+        return setting != 'false'
+      else
+        return setting == 'true'
+      end
+    end
+
+    def read_body
+      if @env["HTTP_CONTENT_ENCODING"] =~ /gzip/
+        input = Zlib::GzipReader.new(@req.body).read
+      else
+        input = @req.body.read
+      end
+    end
+
+    # --------------------------------------
     # HTTP error response handling functions
-    # ------------------------
+    # --------------------------------------
 
     PLAIN_TYPE = {"Content-Type" => "text/plain"}
 
@@ -166,10 +190,14 @@ class GitHttp
       [404, PLAIN_TYPE, ["Not Found"]]
     end
 
+    def render_no_access
+      [403, PLAIN_TYPE, ["Forbidden"]]
+    end
 
-    # ------------------------
+
+    # ------------------------------
     # packet-line handling functions
-    # ------------------------
+    # ------------------------------
 
     def pkt_flush
       '0000'
