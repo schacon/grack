@@ -28,7 +28,7 @@ class GitHttp
     def call(env)
       @env = env
       @req = Rack::Request.new(env)
-
+      
       cmd, path, @reqfile, @rpc = match_routing
 
       return render_method_not_allowed if cmd == 'not_allowed'
@@ -67,7 +67,7 @@ class GitHttp
 
     def git_command(command)
       git_bin = @config[:git_path] || 'git'
-      puts command = "#{git_bin} #{command}"
+      command = "#{git_bin} #{command}"
       command
     end
 
@@ -185,12 +185,11 @@ class GitHttp
       cmd = nil
       path = nil
       SERVICES.each do |method, handler, match, rpc|
-        if m = Regexp.new(match).match(@req.path)
+        if m = Regexp.new(match).match(@req.path_info)
           return ['not_allowed'] if method != @req.request_method
           cmd = handler
           path = m[1]
-          file = @req.path.gsub(path + '/', '')
-          path = path.sub(@config[:server_prefix], '') if @config[:server_prefix]
+          file = @req.path_info.sub(path + '/', '')
           return [cmd, path, file, rpc]
         end
       end
