@@ -34,3 +34,23 @@ web application server (Tomcat, Glassfish, Websphere, JBoss, etc).
 Since the git-http-backend is really just a simple wrapper for the upload-pack
 and receive-pack processes with the '--stateless-rpc' option, it does not 
 actually re-implement very much.
+
+Dependencies
+========================
+Ruby - http://www.ruby-lang.org
+Rack - http://rack.rubyforge.org
+A Rack-compatible web server
+Git >= 1.7
+
+Quick Start
+========================
+$ gem install rack
+$ export GIT_PROJECT_ROOT=/path/to/repos
+$ rackup config.ru
+
+Installation
+========================
+(examples for CGI/FCGI for Apache, Lighttpd, Nginx)
+(using Mongrel/Thin/Unicorn handlers)
+(generating and deploying a WAR file with Warbler)
+
