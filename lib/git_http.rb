@@ -21,7 +21,11 @@ class GitHttp
       ["GET",  'get_idx_file',     "(.*?)/objects/pack/pack-[0-9a-f]{40}\\.idx$"],      
     ]
 
-    def initialize(config)
+    def initialize(config = false)
+      set_config(config)
+    end
+
+    def set_config(config)
       @config = config || {}
     end
 

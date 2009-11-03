@@ -1,0 +1,3 @@
+[submodule "tests/example"]
+	path = tests/example
+	url = git://github.com/schacon/simplegit.git
