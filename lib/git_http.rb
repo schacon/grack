@@ -2,6 +2,7 @@ require 'zlib'
 require 'rack/request'
 require 'rack/response'
 require 'rack/utils'
+require 'time'
 
 class GitHttp
   class App 
@@ -27,6 +28,10 @@ class GitHttp
 
     def set_config(config)
       @config = config || {}
+    end
+
+    def set_config_setting(key, value)
+      @config[key] = value
     end
 
     def call(env)
@@ -162,7 +167,7 @@ class GitHttp
         end
       else
         body = [F.read(reqfile)]
-        size = Utils.bytesize(body.first)
+        size = Rack::Utils.bytesize(body.first)
         @res["Content-Length"] = size
         @res.write body
         @res.finish
@@ -205,20 +210,27 @@ class GitHttp
         return false if @req.content_type != "application/x-git-%s-request" % rpc
       end
       return false if !['upload-pack', 'receive-pack'].include? rpc
-      return true  if @config[:receive_pack] && rpc == 'receive-pack'
-      return true  if @config[:upload_pack]  && rpc == 'upload-pack'
+      if rpc == 'receive-pack'
+        return @config[:receive_pack] if @config.include? :receive_pack
+      end
+      if rpc == 'upload-pack'
+        return @config[:upload_pack] if @config.include? :upload_pack
+      end
       return get_config_setting(rpc)
-      true
     end
 
     def get_config_setting(service_name)
       service_name = service_name.gsub('-', '')
-      setting = `git config http.#{service_name}`.chomp
+      setting = get_git_config("http.#{service_name}")
       if service_name == 'uploadpack'
         return setting != 'false'
       else
         return setting == 'true'
       end
+    end
+
+    def get_git_config(config_name)
+      `git config #{config_name}`.chomp
     end
 
     def read_body

@@ -9,7 +9,7 @@ end
 
 desc "Run test coverage."
 task :rcov do
-  system "rcov tests/test.rb -i lib/git_http.rb -x rack -x Library -x tests"
+  system "rcov tests/*_test.rb -i lib/git_http.rb -x rack -x Library -x tests"
   system "open coverage/index.html"
 end
 
