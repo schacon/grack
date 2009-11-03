@@ -27,7 +27,8 @@ These web servers include Rack handlers in their distributions:
 * Phusion Passenger (which is mod_rack for Apache and for nginx)
 * Unicorn
 
-With Warbler (http://caldersphere.rubyforge.org/warbler/classes/Warbler.html),
+With Warbler 
+( http://caldersphere.rubyforge.org/warbler/classes/Warbler.html ),
 and JRuby, we can also generate a WAR file that can be deployed in any Java
 web application server (Tomcat, Glassfish, Websphere, JBoss, etc).
 
