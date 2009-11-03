@@ -45,14 +45,9 @@ Git >= 1.7
 Quick Start
 ========================
 $ gem install rack
-$ export GIT_PROJECT_ROOT=/path/to/repos
-$ rackup config.ru
-
-Installation
-========================
-(examples for CGI/FCGI for Apache, Lighttpd, Nginx)
-(using Mongrel/Thin/Unicorn handlers)
-(generating and deploying a WAR file with Warbler)
+$ (edit config.ru to set git project path)
+$ rackup --host 127.0.0.1 -p 8080 config.ru
+$ git clone http://127.0.0.1:8080/schacon/grit.git 
 
 License
 ========================
