@@ -74,12 +74,6 @@ class GitHttp
       end
     end
 
-    def git_command(command)
-      git_bin = @config[:git_path] || 'git'
-      command = "#{git_bin} #{command}"
-      command
-    end
-
     def get_info_refs
       service_name = get_service_type
 
@@ -230,7 +224,8 @@ class GitHttp
     end
 
     def get_git_config(config_name)
-      `git config #{config_name}`.chomp
+      cmd = git_command("config #{config_name}")
+      `#{cmd}`.chomp
     end
 
     def read_body
@@ -242,7 +237,14 @@ class GitHttp
     end
 
     def update_server_info
-      `git update-server-info`
+      cmd = git_command("update-server-info")
+      `#{cmd}`
+    end
+
+    def git_command(command)
+      git_bin = @config[:git_path] || 'git'
+      command = "#{git_bin} #{command}"
+      command
     end
 
     # --------------------------------------
