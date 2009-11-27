@@ -1,0 +1,60 @@
+Installation
+========================
+
+** This documentation is not finished yet. I haven't tested all of 
+these and it's obviously incomplete - these are currently just notes.
+
+FastCGI
+---------------------------------------
+Here is an example config from lighttpd server:
+----
+# main fastcgi entry
+$HTTP["url"] =~ "^/myapp/.+$" {
+  fastcgi.server = ( "/myapp" =>
+    ( "localhost" =>
+      ( "bin-path"    => "/var/www/localhost/cgi-bin/dispatch.fcgi",
+        "docroot"     => "/var/www/localhost/htdocs/myapp",
+        "host"        => "127.0.0.1",
+        "port"        => 1026,
+        "check-local" => "disable" 
+      )
+    )
+  )
+} # HTTP[url]
+----
+You can use the examples/dispatch.fcgi file as your dispatcher.
+
+(Example Apache setup?)
+
+Installing in a Java application server
+---------------------------------------
+# install Warbler
+$ sudo gem install warbler
+$ cd gitsmart
+$ (edit config.ru)
+$ warble
+$ cp gitsmart.war /path/to/java/autodeploy/dir
+
+Unicorn
+---------------------------------------
+With Unicorn (http://unicorn.bogomips.org/) you can just run 'unicorn'
+in the directory with the config.ru file.
+
+Thin
+---------------------------------------
+thin.yml
+---
+pid: /home/deploy/myapp/server/thin.pid
+log: /home/deploy/myapp/logs/thin.log
+timeout: 30
+port: 7654
+max_conns: 1024
+chdir: /home/deploy/myapp/site_files
+rackup: /home/deploy/myapp/server/config.ru
+max_persistent_conns: 512
+environment: production
+address: 127.0.0.1
+servers: 1
+daemonize: true
+
+
