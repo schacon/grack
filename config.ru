@@ -2,7 +2,7 @@ $LOAD_PATH.unshift File.expand_path(File.dirname(__FILE__) + '/lib')
 
 use Rack::ShowExceptions
 
-require 'lib/git_http'
+require 'git_http'
 
 config = {
   :project_root => "/opt",
