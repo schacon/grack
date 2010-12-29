@@ -29,7 +29,6 @@ class GitHttpTest < Test::Unit::TestCase
     assert_equal 200, r.status
     assert_equal "application/x-git-upload-pack-advertisement", r.headers["Content-Type"]
     assert_equal "001e# service=git-upload-pack", r.body.split("\n").first
-    assert_match '003f15027957951b64cf874c3557a0f3547bd83b3ff6 refs/tags/v1.4^{}', r.body
     assert_match 'multi_ack_detailed', r.body
   end
 
@@ -70,8 +69,9 @@ class GitHttpTest < Test::Unit::TestCase
     assert_equal 200, r.status
     assert_equal "application/x-git-receive-pack-advertisement", r.headers["Content-Type"]
     assert_equal "001f# service=git-receive-pack", r.body.split("\n").first
-    assert_match '003c234804ec753f265ccce28af38cc9c5fccb846efb refs/tags/v1.4', r.body
-    assert_match 'report-status delete-refs ofs-delta', r.body
+    assert_match 'report-status', r.body
+    assert_match 'delete-refs', r.body
+    assert_match 'ofs-delta', r.body
   end
 
   def test_recieve_pack_rpc
@@ -83,7 +83,6 @@ class GitHttpTest < Test::Unit::TestCase
 
   def test_info_refs_dumb
     get "/example/.git/info/refs"
-    assert_match '234804ec753f265ccce28af38cc9c5fccb846efb	refs/tags/v1.4', r.body
     assert_equal 200, r.status
   end
 
