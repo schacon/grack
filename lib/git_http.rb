@@ -66,6 +66,7 @@ class GitHttp
         command = git_command("#{@rpc} --stateless-rpc #{@dir}")
         IO.popen(command, File::RDWR) do |pipe|
           pipe.write(input)
+          pipe.close_write
           while !pipe.eof?
             block = pipe.read(8192) # 8M at a time
             @res.write block        # steam it to the client
