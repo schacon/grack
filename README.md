@@ -35,8 +35,20 @@ Since the git-http-backend is really just a simple wrapper for the upload-pack
 and receive-pack processes with the '--stateless-rpc' option, it does not 
 actually re-implement very much.
 
-New configuration variable `git_auto_init` may provide you ability to
-auto init bare repository on-demand.
+Configuration key `git_auto_init` may provide you ability to
+auto init bare repository on-demand. Also configuration with key
+`git_post_init` you may write your own way to post-initialization, for example
+to install custom hooks etc. Example **post_init** code:
+
+	class PostInit
+		def init_repo(path, repo)
+		  Dir.chdir(path) do
+		    # add hook
+		    puts "Trying to install hook..."
+		  end
+		end
+	end
+
 
 Dependencies
 ========================

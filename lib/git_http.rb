@@ -173,6 +173,7 @@ class GitHttp
 
     def get_git_dir(path)
       root = @config[:project_root] || `pwd`
+      repo_name = path
       path = File.join(root, path)
       if File.exists?(path) # TODO: check is a valid git directory
         return path
@@ -184,6 +185,11 @@ class GitHttp
           Dir.chdir(path) do
             cmd = git_command("init --bare")
             `#{cmd}`.chomp
+            post_init = @config[:git_post_init]
+            if post_init
+              # TODO: call post_init function
+              post_init.init_repo(path, repo_name)
+            end
           end
           return path
         end
