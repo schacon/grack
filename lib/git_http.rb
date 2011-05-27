@@ -44,6 +44,9 @@ class GitHttp
       return render_not_found if !cmd
 
       @dir = get_git_dir(path)
+      # TODO: add per-repository access if it's
+      #       presented in repo configuration
+
       return render_not_found if !@dir
 
       Dir.chdir(@dir) do
@@ -173,6 +176,17 @@ class GitHttp
       path = File.join(root, path)
       if File.exists?(path) # TODO: check is a valid git directory
         return path
+      else
+        # initialize new git repository, maxk, @42cc
+        autoinit_mode = @config[:git_auto_init] || false
+        if autoinit_mode == true
+          Dir.mkdir(path)
+          Dir.chdir(path) do
+            cmd = git_command("init --bare")
+            `#{cmd}`.chomp
+          end
+          return path
+        end
       end
       false
     end
