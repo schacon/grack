@@ -169,7 +169,7 @@ class GitHttp
     end
 
     def get_git_dir(path)
-      root = @config[:project_root] || `pwd`
+      root = @config[:project_root] || `pwd`.strip!
       path = File.join(root, path)
       if File.exists?(path) # TODO: check is a valid git directory
         return path
