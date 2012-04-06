@@ -67,7 +67,7 @@ class GitHttp
         IO.popen(command, File::RDWR) do |pipe|
           pipe.write(input)
           while !pipe.eof?
-            block = pipe.read(8192) # 8M at a time
+            block = pipe.read(8192) # 8K at a time
             @res.write block        # steam it to the client
           end
         end
