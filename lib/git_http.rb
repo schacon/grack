@@ -188,6 +188,9 @@ class GitHttp
       cmd = nil
       path = nil
       SERVICES.each do |method, handler, match, rpc|
+        if @config.include? :location
+          match = "/"+@config[:location]+"/"+match
+        end
         if m = Regexp.new(match).match(@req.path_info)
           return ['not_allowed'] if method != @req.request_method
           cmd = handler
