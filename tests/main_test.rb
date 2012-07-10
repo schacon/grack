@@ -5,10 +5,10 @@ require 'test/unit'
 require 'mocha'
 require 'digest/sha1'
 
-require 'lib/git_http'
+require 'lib/grack'
 require 'pp'
 
-class GitHttpTest < Test::Unit::TestCase
+class GrackTest < Test::Unit::TestCase
   include Rack::Test::Methods
 
   def example
@@ -21,7 +21,7 @@ class GitHttpTest < Test::Unit::TestCase
       :upload_pack => true,
       :receive_pack => true,
     }
-    GitHttp::App.new(config)
+    Grack::App.new(config)
   end
 
   def test_upload_pack_advertisement
@@ -151,7 +151,7 @@ class GitHttpTest < Test::Unit::TestCase
   end
 
   def test_git_config_receive_pack
-    app1 = GitHttp::App.new({:project_root => example})
+    app1 = Grack::App.new({:project_root => example})
     session = Rack::Test::Session.new(app1)
 
     app1.stubs(:get_git_config).with('http.receivepack').returns('')
@@ -168,7 +168,7 @@ class GitHttpTest < Test::Unit::TestCase
   end
 
   def test_git_config_upload_pack
-    app1 = GitHttp::App.new({:project_root => example})
+    app1 = Grack::App.new({:project_root => example})
     session = Rack::Test::Session.new(app1)
 
     app1.stubs(:get_git_config).with('http.uploadpack').returns('')

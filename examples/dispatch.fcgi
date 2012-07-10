@@ -6,4 +6,4 @@ config = {
   :upload_pack => true,
   :receive_pack => false,
 }
-Rack::Handler::FastCGI.run(GitHttp::App.new(config))
+Rack::Handler::FastCGI.run(Grack::App.new(config))

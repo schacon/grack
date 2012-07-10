@@ -11,4 +11,4 @@ config = {
   :receive_pack => true,
 }
 
-run GitHttp::App.new(config)
+run Grack::App.new(config)
