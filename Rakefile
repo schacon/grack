@@ -3,7 +3,7 @@ task :default => :test
 desc "Run the tests."
 task :test do
   Dir.glob("tests/*_test.rb").each do |file|
-  	require file
+  	require "./#{file}"
   end
 end
 

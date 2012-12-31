@@ -2,10 +2,10 @@ require 'rubygems'
 require 'rack'
 require 'rack/test'
 require 'test/unit'
-require 'mocha'
+require 'mocha/setup'
 require 'digest/sha1'
 
-require 'lib/git_http'
+require './lib/git_http'
 require 'pp'
 
 class GitHttpTest < Test::Unit::TestCase
@@ -20,6 +20,7 @@ class GitHttpTest < Test::Unit::TestCase
       :project_root => example,
       :upload_pack => true,
       :receive_pack => true,
+      :git_path => 'git'
     }
     GitHttp::App.new(config)
   end
@@ -150,36 +151,38 @@ class GitHttpTest < Test::Unit::TestCase
     assert_equal 404, r.status
   end
 
-  def test_git_config_receive_pack
+  def test_get_config_setting_receive_pack
     app1 = GitHttp::App.new({:project_root => example})
     session = Rack::Test::Session.new(app1)
+    abs_path = File.absolute_path(File.join(example,'example'))
 
-    app1.stubs(:get_git_config).with('http.receivepack').returns('')
+    app1.git.stubs(:get_config_setting).with(abs_path,'http.receivepack').returns('')
     session.get "/example/info/refs?service=git-receive-pack"
     assert_equal 404, session.last_response.status
 
-    app1.stubs(:get_git_config).with('http.receivepack').returns('true')
+    app1.git.stubs(:get_config_setting).with(abs_path,'http.receivepack').returns('true')
     session.get "/example/info/refs?service=git-receive-pack"
     assert_equal 200, session.last_response.status
 
-    app1.stubs(:get_git_config).with('http.receivepack').returns('false')
+    app1.git.stubs(:get_config_setting).with(abs_path,'http.receivepack').returns('false')
     session.get "/example/info/refs?service=git-receive-pack"
     assert_equal 404, session.last_response.status
   end
 
-  def test_git_config_upload_pack
+  def test_get_config_setting_upload_pack
     app1 = GitHttp::App.new({:project_root => example})
     session = Rack::Test::Session.new(app1)
+    abs_path = File.absolute_path(File.join(example,'example'))
 
-    app1.stubs(:get_git_config).with('http.uploadpack').returns('')
+    app1.git.stubs(:get_config_setting).with(abs_path,'http.uploadpack').returns('')
     session.get "/example/info/refs?service=git-upload-pack"
     assert_equal 200, session.last_response.status
 
-    app1.stubs(:get_git_config).with('http.uploadpack').returns('true')
+    app1.git.stubs(:get_config_setting).with(abs_path,'http.uploadpack').returns('true')
     session.get "/example/info/refs?service=git-upload-pack"
     assert_equal 200, session.last_response.status
 
-    app1.stubs(:get_git_config).with('http.uploadpack').returns('false')
+    app1.git.stubs(:get_config_setting).with(abs_path,'http.uploadpack').returns('false')
     session.get "/example/info/refs?service=git-upload-pack"
     assert_equal 404, session.last_response.status
   end

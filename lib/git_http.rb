@@ -3,9 +3,12 @@ require 'rack/request'
 require 'rack/response'
 require 'rack/utils'
 require 'time'
+require './lib/git_controller.rb'
 
 class GitHttp
   class App 
+    
+    attr_accessor :git
 
     SERVICES = [
       ["POST", 'service_rpc',      "(.*?)/git-upload-pack$",  'upload-pack'],
@@ -24,6 +27,7 @@ class GitHttp
 
     def initialize(config = false)
       set_config(config)
+      @git = GitController.new(@config[:git_path])
     end
 
     def set_config(config)
@@ -46,9 +50,7 @@ class GitHttp
       @dir = get_git_dir(path)
       return render_not_found if !@dir
 
-      Dir.chdir(@dir) do
-        self.method(cmd).call()
-      end
+      self.method(cmd).call()
     end
 
     # ---------------------------------
@@ -58,13 +60,11 @@ class GitHttp
     def service_rpc
       return render_no_access if !has_access(@rpc, true)
       input = read_body
-
       @res = Rack::Response.new
       @res.status = 200
       @res["Content-Type"] = "application/x-git-%s-result" % @rpc
       @res.finish do
-        command = git_command("#{@rpc} --stateless-rpc #{@dir}")
-        IO.popen(command, File::RDWR) do |pipe|
+        @git.command(@rpc, ["--stateless-rpc", @dir]) do |pipe|
           pipe.write(input)
           while !pipe.eof?
             block = pipe.read(8192) # 8M at a time
@@ -78,8 +78,7 @@ class GitHttp
       service_name = get_service_type
 
       if has_access(service_name)
-        cmd = git_command("#{service_name} --stateless-rpc --advertise-refs .")
-        refs = `#{cmd}`
+        refs = @git.command(service_name, ["--stateless-rpc", "--advertise-refs", @dir])
 
         @res = Rack::Response.new
         @res.status = 200
@@ -163,7 +162,7 @@ class GitHttp
         body = [F.read(reqfile)]
         size = Rack::Utils.bytesize(body.first)
         @res["Content-Length"] = size
-        @res.write body
+        @res.body = body
         @res.finish
       end
     end
@@ -215,17 +214,12 @@ class GitHttp
 
     def get_config_setting(service_name)
       service_name = service_name.gsub('-', '')
-      setting = get_git_config("http.#{service_name}")
+      setting = @git.get_config_setting(@dir, "http.#{service_name}")
       if service_name == 'uploadpack'
         return setting != 'false'
       else
         return setting == 'true'
       end
-    end
-
-    def get_git_config(config_name)
-      cmd = git_command("config #{config_name}")
-      `#{cmd}`.chomp
     end
 
     def read_body
@@ -237,8 +231,7 @@ class GitHttp
     end
 
     def update_server_info
-      cmd = git_command("update-server-info")
-      `#{cmd}`
+      @git.command("update-server-info")
     end
 
     def git_command(command)
