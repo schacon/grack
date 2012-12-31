@@ -5,15 +5,47 @@ class GitController
     path = path == nil ? 'git' : path 
     @git_path = path 
   end
+  
+  def command_options
+    {
+      :stateless_rpc => "--stateless-rpc",
+      :advertise_refs => "--advertise-refs"	
+    }
+  end  
 
   def command(cmd, args = [], &block)
     cmd = @git_path + " " + cmd + " " + args.join(" ")
-    if block != nil then
+    if block_given? then
       IO.popen(cmd, File::RDWR) do |pipe|
         yield pipe
       end
     else
       result = `#{cmd}`
+    end
+  end
+  
+  def upload_pack(repository, opts = {}, &block)
+    cmd = "upload-pack"
+    args = []
+    opts.each {|k,v| args.push command_options[k]}
+    args.push repository
+    self.command(cmd, args, &block)
+  end
+  
+  def receive_pack(repository, opts = {}, &block)
+    cmd = "receive-pack"
+    args = []
+    opts.each {|k,v| args.push command_options[k]}
+    args.push repository
+    self.command(cmd, args, &block)
+  end
+  
+  def update_server_info(repository, opts = {}, &block)
+    cmd = "update-server-info"
+    args = []
+    opts.each {|k,v| args.push command_options[k]}
+    Dir.chdir(repository) do # "git update-server-info" does not take a parameter to specify the repository, so set the working directory to the repository
+      self.command(cmd, args, &block)
     end
   end
 

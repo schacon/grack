@@ -9,6 +9,8 @@ class GitHttp
   class App 
     
     attr_accessor :git
+    
+    VALID_SERVICE_TYPES = ['upload-pack', 'receive-pack']
 
     SERVICES = [
       ["POST", 'service_rpc',      "(.*?)/git-upload-pack$",  'upload-pack'],
@@ -60,11 +62,12 @@ class GitHttp
     def service_rpc
       return render_no_access if !has_access(@rpc, true)
       input = read_body
+      git_cmd = @rpc == "upload-pack" ? :upload_pack : :receive_pack
       @res = Rack::Response.new
       @res.status = 200
       @res["Content-Type"] = "application/x-git-%s-result" % @rpc
       @res.finish do
-        @git.command(@rpc, ["--stateless-rpc", @dir]) do |pipe|
+        @git.send(git_cmd, @dir, {:stateless_rpc => true}) do |pipe|
           pipe.write(input)
           while !pipe.eof?
             block = pipe.read(8192) # 8M at a time
@@ -78,7 +81,8 @@ class GitHttp
       service_name = get_service_type
 
       if has_access(service_name)
-        refs = @git.command(service_name, ["--stateless-rpc", "--advertise-refs", @dir])
+        git_cmd = service_name == "upload-pack" ? :upload_pack : :receive_pack
+        refs = @git.send(git_cmd, @dir, {:stateless_rpc => true, :advertise_refs =>true})
 
         @res = Rack::Response.new
         @res.status = 200
@@ -202,7 +206,7 @@ class GitHttp
       if check_content_type
         return false if @req.content_type != "application/x-git-%s-request" % rpc
       end
-      return false if !['upload-pack', 'receive-pack'].include? rpc
+      return false if !VALID_SERVICE_TYPES.include? rpc
       if rpc == 'receive-pack'
         return @config[:receive_pack] if @config.include? :receive_pack
       end
@@ -231,13 +235,7 @@ class GitHttp
     end
 
     def update_server_info
-      @git.command("update-server-info")
-    end
-
-    def git_command(command)
-      git_bin = @config[:git_path] || 'git'
-      command = "#{git_bin} #{command}"
-      command
+      @git.update_server_info(@dir)
     end
 
     # --------------------------------------

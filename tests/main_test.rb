@@ -154,7 +154,7 @@ class GitHttpTest < Test::Unit::TestCase
   def test_get_config_setting_receive_pack
     app1 = GitHttp::App.new({:project_root => example})
     session = Rack::Test::Session.new(app1)
-    abs_path = File.absolute_path(File.join(example,'example'))
+    abs_path = File.expand_path(File.join(example,'example'))
 
     app1.git.stubs(:get_config_setting).with(abs_path,'http.receivepack').returns('')
     session.get "/example/info/refs?service=git-receive-pack"
@@ -172,7 +172,7 @@ class GitHttpTest < Test::Unit::TestCase
   def test_get_config_setting_upload_pack
     app1 = GitHttp::App.new({:project_root => example})
     session = Rack::Test::Session.new(app1)
-    abs_path = File.absolute_path(File.join(example,'example'))
+    abs_path = File.expand_path(File.join(example,'example'))
 
     app1.git.stubs(:get_config_setting).with(abs_path,'http.uploadpack').returns('')
     session.get "/example/info/refs?service=git-upload-pack"
