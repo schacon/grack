@@ -25,9 +25,9 @@ class GitHttp
       ["GET",  'get_idx_file',     "(.*?)/objects/pack/pack-[0-9a-f]{40}\\.idx$"],      
     ]
 
-    def initialize(config = false)
+    def initialize(config = false, controller_type = GitController)
       set_config(config)
-      @git = GitController.new(@config[:git_path])
+      @git = controller_type.new(@config[:git_path])
     end
 
     def set_config(config)
