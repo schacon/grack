@@ -9,6 +9,8 @@ require 'rjgit_controller'
 config = {
   :project_root => "./",
   :controller => RJGitController,
+  #:controller => GitController,
+  #:git_path => '/usr/bin/git',
   :upload_pack => true,
   :receive_pack => true,
 }
