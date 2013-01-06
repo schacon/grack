@@ -6,6 +6,7 @@ require 'mocha/setup'
 require 'digest/sha1'
 
 require './lib/git_http'
+require './lib/git_controller'
 require 'pp'
 
 class GitHttpTest < Test::Unit::TestCase
@@ -20,6 +21,7 @@ class GitHttpTest < Test::Unit::TestCase
       :project_root => example,
       :upload_pack => true,
       :receive_pack => true,
+      :controller => GitController,
       :git_path => 'git'
     }
     GitHttp::App.new(config)
@@ -152,7 +154,7 @@ class GitHttpTest < Test::Unit::TestCase
   end
 
   def test_get_config_setting_receive_pack
-    app1 = GitHttp::App.new({:project_root => example})
+    app1 = GitHttp::App.new({:project_root => example, :controller=>GitController})
     session = Rack::Test::Session.new(app1)
     abs_path = File.expand_path(File.join(example,'example'))
 
@@ -170,7 +172,7 @@ class GitHttpTest < Test::Unit::TestCase
   end
 
   def test_get_config_setting_upload_pack
-    app1 = GitHttp::App.new({:project_root => example})
+    app1 = GitHttp::App.new({:project_root => example, :controller=>GitController})
     session = Rack::Test::Session.new(app1)
     abs_path = File.expand_path(File.join(example,'example'))
 

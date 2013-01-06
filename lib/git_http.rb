@@ -3,7 +3,6 @@ require 'rack/request'
 require 'rack/response'
 require 'rack/utils'
 require 'time'
-require './lib/git_controller.rb'
 
 class GitHttp
   class App 
@@ -27,9 +26,10 @@ class GitHttp
       ["GET",  'get_idx_file',     "(.*?)/objects/pack/pack-[0-9a-f]{40}\\.idx$"],      
     ]
 
-    def initialize(config = false, controller_type = GitController)
+    def initialize(config = false)
       set_config(config)
-      @git = controller_type.new(@config[:git_path])
+      @git = config[:controller].new
+      @git.path = config[:git_path] if config[:controller].method_defined?(:path)
     end
 
     def set_config(config)
@@ -67,11 +67,10 @@ class GitHttp
       @res.status = 200
       @res["Content-Type"] = "application/x-git-%s-result" % @rpc
       @res.finish do
-        @git.send(git_cmd, @dir, {:stateless_rpc => true}) do |pipe|
-          pipe.write(input)
+        @git.send(git_cmd, @dir, {:msg => input}) do |pipe|
           while !pipe.eof?
             block = pipe.read(8192) # 8M at a time
-            @res.write block        # steam it to the client
+            @res.write block        # stream it to the client
           end
         end
       end
@@ -82,7 +81,7 @@ class GitHttp
 
       if has_access(service_name)
         git_cmd = service_name == "upload-pack" ? :upload_pack : :receive_pack
-        refs = @git.send(git_cmd, @dir, {:stateless_rpc => true, :advertise_refs =>true})
+        refs = @git.send(git_cmd, @dir, {:advertise_refs =>true})
 
         @res = Rack::Response.new
         @res.status = 200
