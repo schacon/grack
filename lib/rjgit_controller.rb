@@ -1,5 +1,5 @@
 require "stringio"
-require "~/Scripting/repotag/gems/rjgit/lib/rjgit.rb"
+require "~/projects/repotag/gems/rjgit/lib/rjgit.rb"
 
 class RJGitController
 
