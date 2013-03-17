@@ -1,4 +1,3 @@
-require "stringio"
 require "~/projects/repotag/gems/rjgit/lib/rjgit.rb"
 
 class RJGitController
@@ -17,7 +16,7 @@ class RJGitController
       else
         nil
       end
-    return nil if pack == nil
+    return nil unless pack
     if opts[:advertise_refs] then
       return pack.advertise_refs
     else
@@ -44,17 +43,17 @@ class RJGitController
   end
 
   def get_config_setting(repository_path, key)
-    r = repo(repository_path)
+    repository = repo(repository_path)
     domains = key.split(".")
     return nil if domains.length < 2
     begin
-      loop_settings = r.config
+      loop_settings = repository.config
     rescue
       return nil
     end
-    domains.each do |d|
-      return nil if ! (loop_settings.is_a?(RJGit::Config::Group) || loop_settings.is_a?(RJGit::Config))
-      loop_settings = loop_settings[d]
+    domains.each do |domain|
+      return nil unless (loop_settings.is_a?(RJGit::Config::Group) || loop_settings.is_a?(RJGit::Config))
+      loop_settings = loop_settings[domain]
       break if loop_settings == nil
     end
     if loop_settings == nil then

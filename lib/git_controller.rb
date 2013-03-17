@@ -2,8 +2,7 @@ class GitController
   attr_accessor :git_path
 
   def initialize(path = nil)
-    path = path == nil ? 'git' : path 
-    @git_path = path
+    @git_path = path ? path : 'git'
   end
   
   def command_options
@@ -13,7 +12,7 @@ class GitController
   end
 
   def command(cmd, opts = {}, &block)
-    cmd = @git_path + " " + cmd + " " + opts[:args].join(" ")
+    cmd = "#{git_path} #{cmd} #{opts[:args].join(" ")}"
     if block_given? then
       IO.popen(cmd, File::RDWR) do |pipe|
         pipe.write opts[:msg] if opts.has_key?(:msg)
@@ -42,19 +41,19 @@ class GitController
     self.command(cmd, opts, &block)
   end
   
-  def update_server_info(repository, opts = {}, &block)
+  def update_server_info(repository_path, opts = {}, &block)
     cmd = "update-server-info"
     args = []
     opts.each {|k,v| args << command_options[k] if command_options.has_key?(k) }
     opts[:args] = args
-    Dir.chdir(repository) do # "git update-server-info" does not take a parameter to specify the repository, so set the working directory to the repository
+    Dir.chdir(repository_path) do # "git update-server-info" does not take a parameter to specify the repository, so set the working directory to the repository
       self.command(cmd, opts, &block)
     end
   end
 
   def get_config_setting(repository_path, key)
     path = get_config_location(repository_path)
-    raise "Config file could not be found for repository in #{repository_path}." if path == nil
+    raise "Config file could not be found for repository in #{repository_path}." unless path
     self.command("config", {:args => ["-f #{path}", key]}).chomp
   end
 

@@ -28,7 +28,7 @@ class GitHttp
 
     def initialize(config = false)
       set_config(config)
-      @git = config[:controller].new
+      @git = config[:controller] ? config[:controller].new : GitController.new
       @git.path = config[:git_path] if config[:controller].method_defined?(:path)
     end
 
