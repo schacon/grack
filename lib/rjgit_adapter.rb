@@ -1,6 +1,6 @@
-require "~/projects/repotag/gems/rjgit/lib/rjgit.rb"
+require "rjgit"
 
-class RJGitController
+class RJGitAdapter
 
   def repo(repository_path)
     RJGit::Repo.new(repository_path)
@@ -45,22 +45,19 @@ class RJGitController
   def get_config_setting(repository_path, key)
     repository = repo(repository_path)
     domains = key.split(".")
-    return nil if domains.length < 2
     begin
       loop_settings = repository.config
     rescue
       return nil
     end
     domains.each do |domain|
-      return nil unless (loop_settings.is_a?(RJGit::Config::Group) || loop_settings.is_a?(RJGit::Config))
-      loop_settings = loop_settings[domain]
-      break if loop_settings == nil
+      begin
+        loop_settings = loop_settings[domain]
+      rescue
+        return nil
+      end
     end
-    if loop_settings == nil then
-      return nil
-    else
-      return loop_settings.value
-    end
+    return loop_settings.is_a?(Hash) ? loop_settings : loop_settings.to_s
   end
   
 end

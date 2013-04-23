@@ -3,19 +3,23 @@ require 'test/unit'
 require 'mocha/setup'
 require "stringio"
 
-require './lib/rjgit_controller'
+require './lib/rjgit_adapter'
 
 
-class RJGitControllerTest < Test::Unit::TestCase
+class RJGitAdapterTest < Test::Unit::TestCase
 
   NON_EXISTENT_REPOSITORY_AD = "00710000000000000000000000000000000000000000 capabilities^{}\000 side-band-64k delete-refs report-status ofs-delta \n0000"
   
   def example
     File.expand_path(File.join(File.dirname(__FILE__),'example'))
   end
+  
+  def test_repo
+    File.join(example, 'test_repo')
+  end
 
   def setup
-    @test_git = RJGitController.new
+    @test_git = RJGitAdapter.new
   end
   
   def repo_test
@@ -56,13 +60,12 @@ class RJGitControllerTest < Test::Unit::TestCase
   end
   
   def test_get_config_setting
-    RJGit::Repo.any_instance.stubs(:config).raises(RuntimeError)
-    assert_equal nil, @test_git.get_config_setting(example, 'core.bare')
-    RJGit::Repo.any_instance.unstub(:config)
-    assert_equal 'false', @test_git.get_config_setting(example, 'core.bare')
-    assert_equal nil, @test_git.get_config_setting(example, 'core.bare.nothing')
-    assert_equal nil, @test_git.get_config_setting(example, 'core')
+    assert_equal 'false', @test_git.get_config_setting(test_repo, 'core.bare')
+    assert_equal nil, @test_git.get_config_setting(test_repo, 'core.bare.nothing')
+    assert_equal Hash, @test_git.get_config_setting(test_repo, 'core').class
     assert_equal nil, @test_git.get_config_setting(File.join('/','tmp'), 'core.bare')
+    RJGit::Repo.any_instance.stubs(:config).raises(RuntimeError)
+    assert_equal nil, @test_git.get_config_setting(test_repo, 'core.bare')
   end
   
 end

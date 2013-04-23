@@ -1,4 +1,4 @@
-class GitController
+class GitAdapter
   attr_accessor :git_path
 
   def initialize(path = nil)

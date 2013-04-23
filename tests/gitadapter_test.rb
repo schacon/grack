@@ -2,10 +2,10 @@ require 'rubygems'
 require 'test/unit'
 require 'mocha/setup'
 
-require './lib/git_controller'
+require './lib/git_adapter'
 
 
-class GitControllerTest < Test::Unit::TestCase
+class GitAdapterTest < Test::Unit::TestCase
   
   GIT_STATUS_RESPONSE = "nothing to commit (working directory clean)"
   
@@ -14,16 +14,16 @@ class GitControllerTest < Test::Unit::TestCase
   end
   
   def example
-    File.expand_path(File.join(File.dirname(__FILE__),'example'))
+    File.expand_path(File.join(File.dirname(__FILE__),'example','test_repo'))
   end
 
   def setup
-    @test_git = GitController.new(git)
+    @test_git = GitAdapter.new(git)
   end
   
   def test_init
     assert_equal git, @test_git.git_path
-    @test_git = GitController.new('/tmp/git')
+    @test_git = GitAdapter.new('/tmp/git')
     assert_equal '/tmp/git', @test_git.git_path
   end
   
