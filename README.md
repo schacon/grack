@@ -31,16 +31,15 @@ With [Warbler](http://caldersphere.rubyforge.org/warbler/classes/Warbler.html),
 and JRuby, we can also generate a WAR file that can be deployed in any Java
 web application server (Tomcat, Glassfish, Websphere, JBoss, etc).
 
-Since the git-http-backend is really just a simple wrapper for the upload-pack
-and receive-pack processes with the '--stateless-rpc' option, it does not 
-actually re-implement very much.
+By default, Grack uses calls to git on the system to implement Smart-Http. Since the git-http-backend is really just a simple wrapper for the upload-pack
+and receive-pack processes with the '--stateless-rpc' option, this does not actually re-implement very much. However, it is possible to use a different backend by specifying a different Adapter.
 
 Dependencies
 ========================
 * Ruby - http://www.ruby-lang.org
 * Rack - http://rack.rubyforge.org
 * A Rack-compatible web server
-* Git >= 1.7 (currently the 'pu' branch)
+* Git >= 1.7 (if using the standard GitAdapter, see below)
 * Mocha (only for running the tests)
 
 Quick Start
@@ -50,20 +49,38 @@ Quick Start
 	$ rackup --host 127.0.0.1 -p 8080 config.ru
 	$ git clone http://127.0.0.1:8080/schacon/grit.git 
 
+Adapters
+========================
+
+Grack makes calls to the git binary through the GitAdapter abstraction class. Grack can be made to use a different backend by specifying a different Adapter class in Grack's configuration.
+
+See below if you are looking to create a custom Adapter.
+
 Contributing
 ========================
 If you would like to contribute to the Grack project, I prefer to get
 pull-requests via GitHub.  You should include tests for whatever functionality
 you add.  Just fork this project, push your changes to your fork and click
 the 'pull request' button.  To run the tests, you first need to install the 
-'mocha' mocking library and initialize the submodule.
+'mocha' mocking library.
 
-	$ sudo gem install mocha
-	$ git submodule init
-	$ git submodule update
+	$ gem install mocha
 
 Then you should be able to run the tests with a 'rake' command.  You can also
 run coverage tests with 'rake rcov' if you have rcov installed.
+
+### Developing Adapters
+
+Adapters are abstraction classes that handle the actual implementation of the smart-http protocol (advertising refs, uploading and receiving packfiles). Such abstraction classes must have the following methods:
+
+```ruby
+MyAdapter.receive_pack(repository_path, opts = {}, &block)
+MyAdapter.upload_pack(repository_path, opts = {}, &block)
+MyAdapter.update_server_info(repository_path, opts = {}, &block) # The equivalent of 'git update-server-info'. Optional, for falling back to dump-http mode.
+MyAdapter.get_config_setting(repository_path, key) # Always returns a string, e.g. "false" for key "core.bare".
+```
+
+Both upload_pack and receive_pack must return a ref-advertisement if opts[:advertise_refs] is set to true; otherwise, they must yield an IO object that Grack uses to read the client's response from.
 
 License
 ========================
