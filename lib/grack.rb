@@ -69,8 +69,8 @@ module Grack
       @res.finish do
         @git.send(git_cmd, @dir, {:msg => input}) do |pipe|
           while !pipe.eof?
-            block = pipe.read(8192) # 8M at a time
-            @res.write block        # stream it to the client
+            block = pipe.read(8192) # 8K at a time
+            @res.write block        # steam it to the client
           end
         end
       end
@@ -171,7 +171,7 @@ module Grack
     end
 
     def get_git_dir(path)
-      root = @config[:project_root] || `pwd`
+      root = @config[:project_root] || Dir.pwd
       path = File.join(root, path)
       if File.exists?(path) # TODO: check is a valid git directory
         return path
