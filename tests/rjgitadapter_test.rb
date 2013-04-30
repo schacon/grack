@@ -7,6 +7,7 @@ require './lib/rjgit_adapter'
 
 
 class RJGitAdapterTest < Test::Unit::TestCase
+  include Grack
 
   NON_EXISTENT_REPOSITORY_AD = "00710000000000000000000000000000000000000000 capabilities^{}\000 side-band-64k delete-refs report-status ofs-delta \n0000"
   

@@ -6,6 +6,7 @@ require './lib/git_adapter'
 
 
 class GitAdapterTest < Test::Unit::TestCase
+  include Grack
   
   GIT_STATUS_RESPONSE = "nothing to commit (working directory clean)"
   

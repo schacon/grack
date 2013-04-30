@@ -4,7 +4,7 @@ require 'rack/response'
 require 'rack/utils'
 require 'time'
 
-class GitHttp
+module Grack
   class App 
     
     attr_accessor :git

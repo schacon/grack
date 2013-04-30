@@ -2,7 +2,7 @@ $LOAD_PATH.unshift File.expand_path(File.dirname(__FILE__) + '/lib')
 
 use Rack::ShowExceptions
 
-require 'git_http'
+require 'grack'
 require 'git_adapter'
 
 config = {
@@ -13,4 +13,4 @@ config = {
   :receive_pack => true,
 }
 
-run GitHttp::App.new(config)
+run Grack::App.new(config)

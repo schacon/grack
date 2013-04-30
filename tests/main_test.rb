@@ -5,12 +5,13 @@ require 'test/unit'
 require 'mocha/setup'
 require 'digest/sha1'
 
-require './lib/git_http'
+require './lib/grack'
 require './lib/git_adapter'
 require 'pp'
 
 class GitHttpTest < Test::Unit::TestCase
   include Rack::Test::Methods
+  include Grack
 
   def example
     File.join(File.expand_path(File.dirname(__FILE__)),'example')
@@ -28,7 +29,7 @@ class GitHttpTest < Test::Unit::TestCase
       :adapter => GitAdapter,
       :git_path => 'git'
     }
-    GitHttp::App.new(config)
+    App.new(config)
   end
 
   def test_upload_pack_advertisement
@@ -158,7 +159,7 @@ class GitHttpTest < Test::Unit::TestCase
   end
 
   def test_get_config_setting_receive_pack
-    app1 = GitHttp::App.new({:project_root => example, :adapter=>GitAdapter})
+    app1 = App.new({:project_root => example, :adapter=>GitAdapter})
     session = Rack::Test::Session.new(app1)
     abs_path = test_repo
 
@@ -176,7 +177,7 @@ class GitHttpTest < Test::Unit::TestCase
   end
 
   def test_get_config_setting_upload_pack
-    app1 = GitHttp::App.new({:project_root => example, :adapter=>GitAdapter})
+    app1 = App.new({:project_root => example, :adapter=>GitAdapter})
     session = Rack::Test::Session.new(app1)
     abs_path = test_repo
 
