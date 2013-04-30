@@ -83,7 +83,7 @@ MyAdapter.update_server_info(repository_path, opts = {}, &block) # The equivalen
 MyAdapter.get_config_setting(repository_path, key) # Always returns a string, e.g. "false" for key "core.bare".
 ```
 
-Both upload_pack and receive_pack must return a ref-advertisement if opts[:advertise_refs] is set to true; otherwise, they must yield an IO object that Grack uses to read the client's response from.
+Both upload_pack and receive_pack must return a ref-advertisement string if opts[:advertise_refs] is set to true; otherwise, they must yield an IO object that Grack uses to read the client's response from.
 
 License
 ========================
