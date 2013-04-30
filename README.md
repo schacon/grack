@@ -32,7 +32,7 @@ and JRuby, we can also generate a WAR file that can be deployed in any Java
 web application server (Tomcat, Glassfish, Websphere, JBoss, etc).
 
 By default, Grack uses calls to git on the system to implement Smart-Http. Since the git-http-backend is really just a simple wrapper for the upload-pack
-and receive-pack processes with the '--stateless-rpc' option, this does not actually re-implement very much. However, it is possible to use a different backend by specifying a different Adapter.
+and receive-pack processes with the '--stateless-rpc' option, this does not actually re-implement very much. However, it is possible to use a different backend by specifying a different Adapter. See below for a list.
 
 Dependencies
 ========================
@@ -53,6 +53,9 @@ Adapters
 ========================
 
 Grack makes calls to the git binary through the GitAdapter abstraction class. Grack can be made to use a different backend by specifying a different Adapter class in Grack's configuration.
+
+Alternative adapters available:
+- [rjgit_grack](http://github.com/dometto/rjgit_grack) lets Grack use the [RJGit](http://github.com/repotag/rjgit) gem to implement smart-http in pure jruby.
 
 See below if you are looking to create a custom Adapter.
 
