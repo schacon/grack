@@ -69,8 +69,7 @@ the 'pull request' button.  To run the tests, you first need to install the
 Then you should be able to run the tests with a 'rake' command.  You can also
 run coverage tests with 'rake rcov' if you have rcov installed.
 
-Developing Adapters
--------------------
+### Developing Adapters
 
 Adapters are abstraction classes that handle the actual implementation of the smart-http protocol (advertising refs, uploading and receiving packfiles). Such abstraction classes must have the following methods:
 
