@@ -72,12 +72,14 @@ run coverage tests with 'rake rcov' if you have rcov installed.
 Developing Adapters
 -------------------
 
-Adapters are abstraction classes that handle the actual implementation of the smart-http protocol (advertising refs, uploading and receiving packfiles). Such abstraction classes must respond to the following methods:
+Adapters are abstraction classes that handle the actual implementation of the smart-http protocol (advertising refs, uploading and receiving packfiles). Such abstraction classes must have the following methods:
 
-$ MyAdapter.receive_pack(repository_path, opts = {}, &block)
-$ MyAdapter.upload_pack(repository_path, opts = {}, &block)
-$ MyAdapter.update_server_info(repository_path, opts = {}, &block) # The equivalent of 'git update-server-info'. Optional, for falling back to dump-http mode.
-$ MyAdapter.get_config_setting(repository_path, key) # Always returns a string, e.g. "false" for key "core.bare".
+```ruby
+MyAdapter.receive_pack(repository_path, opts = {}, &block)
+MyAdapter.upload_pack(repository_path, opts = {}, &block)
+MyAdapter.update_server_info(repository_path, opts = {}, &block) # The equivalent of 'git update-server-info'. Optional, for falling back to dump-http mode.
+MyAdapter.get_config_setting(repository_path, key) # Always returns a string, e.g. "false" for key "core.bare".
+```
 
 Both upload_pack and receive_pack must return a ref-advertisement if opts[:advertise_refs] is set to true; otherwise, they must yield an IO object that Grack uses to read the client's response from.
 
