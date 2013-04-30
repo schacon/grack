@@ -7,7 +7,7 @@ require 'git_adapter'
 
 config = {
   :project_root => "./",
-  :adapter => GitAdapter,
+  :adapter => Grack::GitAdapter,
   :git_path => '/usr/bin/git',
   :upload_pack => true,
   :receive_pack => true,
