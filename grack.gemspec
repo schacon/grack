@@ -9,7 +9,7 @@ distributed with C Git with a Rack application. By default, Grack uses calls to 
 and receive-pack processes with the '--stateless-rpc' option, this does not actually re-implement very much. However, it is possible to use a different backend by specifying a different Adapter."
   s.authors = ['Scott Chacon', 'Dawa Ometto']
   s.email = 'schacon@gmail.com'
-  s.files = ["lib/*", "README.md", "install.txt", "Gemfile"]
+  s.files = ["lib/grack.rb", "lib/git_adapter.rb", "README.md", "install.txt", "Gemfile"]
   s.homepage = "http://github.com/schacon/grack"
   s.license = 'MIT'
 
