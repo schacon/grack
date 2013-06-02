@@ -26,6 +26,5 @@ multitask :start => [ 'grack:start' ]
 
 def rename_test_git_dir
   dot_git = File.join(File.dirname(__FILE__), 'tests', 'example')
- puts dot_git
   cp_r File.join(dot_git, '_git'), File.join(dot_git, 'test_repo', '.git'), :remove_destination => true
 end
