@@ -13,5 +13,5 @@ and receive-pack processes with the '--stateless-rpc' option, this does not actu
   s.homepage = "http://github.com/schacon/grack"
   s.license = 'MIT'
 
-  s.add_dependency('rack', '~> 0.9.2.2')
+  s.add_dependency('rack')
 end
