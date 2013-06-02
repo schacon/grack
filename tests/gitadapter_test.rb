@@ -8,7 +8,7 @@ require './lib/git_adapter'
 class GitAdapterTest < Test::Unit::TestCase
   include Grack
   
-  GIT_STATUS_RESPONSE = "00788aea0b0551a2f89151033760d135a7ac338adb79 refs/heads/master\u0000 report-status delete-refs side-band-64k quiet ofs-delta"
+  GIT_RECEIVE_RESPONSE = "0078cb067e06bdf6e34d4abebf6cf2de85d65a52c65e refs/heads/master\u0000 report-status delete-refs side-band-64k quiet ofs-delta"
   
   def git
     'git' # Path to git on test system
@@ -29,7 +29,7 @@ class GitAdapterTest < Test::Unit::TestCase
   end
   
   def test_command
-    assert_equal GIT_STATUS_RESPONSE, @test_git.command("receive-pack --advertise-refs", {:args => [example]}).split("\n").first
+    assert_equal GIT_RECEIVE_RESPONSE, @test_git.command("receive-pack --advertise-refs", {:args => [example]}).split("\n").first
     
     @test_git.command("upload-pack", {:args => [example]}) do |pipe|
       assert_equal false, pipe.eof?
