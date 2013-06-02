@@ -44,7 +44,7 @@ module Grack
       @env = env
       @req = Rack::Request.new(env)
       
-      cmd, path, @reqfile, @rpc = match_routing(@req)
+      cmd, path, @reqfile, @rpc = self.class.match_routing(@req)
 
       return render_method_not_allowed if cmd == 'not_allowed'
       return render_not_found if !cmd
@@ -186,7 +186,7 @@ module Grack
       service_type.gsub('git-', '')
     end
 
-    def match_routing(req)
+    def self.match_routing(req)
       cmd = nil
       path = nil
       SERVICES.each do |method, handler, match, rpc|
