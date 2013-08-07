@@ -3,12 +3,12 @@ source 'https://rubygems.org'
 gem "rack", "~> 1.5.2"
 gem "rake"
 
-gem 'coveralls', require: false
+gem "coveralls", :require => false
 
 group :test do
   gem "test"
   gem "rack-test", "~> 0.6.2"
   gem "mocha"
-  gem "rcov"
-  #Use gem "rcov","0.9.11" for Ruby 1.9
+  gem "simplecov", :require => false # Disable for ruby 1.8
+  #gem "rcov", :require => false # Enable for ruby 1.8
 end

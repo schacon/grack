@@ -8,7 +8,7 @@ task :test do
   end
 end
 
-desc "Run test coverage."
+desc "Run test coverage with rcov (ruby 1.8)."
 task :rcov do
   system "rcov tests/*_test.rb -i lib/git_http.rb -x rack -x Library -x tests"
   system "open coverage/index.html"

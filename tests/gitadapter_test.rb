@@ -2,13 +2,18 @@ require 'rubygems'
 require 'test/unit'
 require 'mocha/setup'
 
+unless /1\.8\.\d/ =~ RUBY_VERSION
+  require 'simplecov'
+  SimpleCov.start
+end
+
 require './lib/git_adapter'
 
 
 class GitAdapterTest < Test::Unit::TestCase
   include Grack
   
-  GIT_RECEIVE_RESPONSE = "0078cb067e06bdf6e34d4abebf6cf2de85d65a52c65e refs/heads/master\u0000 report-status delete-refs side-band-64k quiet ofs-delta"
+  GIT_RECEIVE_RESPONSE = "cb067e06bdf6e34d4abebf6cf2de85d65a52c65e refs/heads/master\000 report-status delete-refs side-band-64k quiet ofs-delta"
   
   def git
     'git' # Path to git on test system
@@ -29,7 +34,7 @@ class GitAdapterTest < Test::Unit::TestCase
   end
   
   def test_command
-    assert_equal GIT_RECEIVE_RESPONSE, @test_git.command("receive-pack --advertise-refs", {:args => [example]}).split("\n").first
+    assert_equal true, @test_git.command("receive-pack --advertise-refs", {:args => [example]}).split("\n").first.include?(GIT_RECEIVE_RESPONSE)
     
     @test_git.command("upload-pack", {:args => [example]}) do |pipe|
       assert_equal false, pipe.eof?

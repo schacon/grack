@@ -5,6 +5,11 @@ require 'test/unit'
 require 'mocha/setup'
 require 'digest/sha1'
 
+unless /1\.8\.\d/ =~ RUBY_VERSION
+  require 'simplecov'    
+  SimpleCov.start
+end
+
 require './lib/grack'
 require './lib/git_adapter'
 require 'pp'

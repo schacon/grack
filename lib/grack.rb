@@ -3,7 +3,7 @@ require 'rack/request'
 require 'rack/response'
 require 'rack/utils'
 require 'time'
-require 'git_adapter.rb'
+require File.join(File.dirname(__FILE__), 'git_adapter.rb')
 
 module Grack
   class App 
