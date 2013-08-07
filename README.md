@@ -52,7 +52,13 @@ Quick Start
 Adapters
 ========================
 
-Grack makes calls to the git binary through the GitAdapter abstraction class. Grack can be made to use a different backend by specifying a different Adapter class in Grack's configuration.
+Grack makes calls to the git binary through the GitAdapter abstraction class. Grack can be made to use a different backend by specifying a different Adapter class in Grack's configuration, for example:
+
+```ruby
+Grack::App.new({
+      :adapter => Grack::RJGitAdapter
+    })
+```
 
 Alternative adapters available:
 - [rjgit_grack](http://github.com/dometto/rjgit_grack) lets Grack use the [RJGit](http://github.com/repotag/rjgit) gem to implement smart-http in pure jruby.
@@ -64,13 +70,9 @@ Contributing
 If you would like to contribute to the Grack project, I prefer to get
 pull-requests via GitHub.  You should include tests for whatever functionality
 you add.  Just fork this project, push your changes to your fork and click
-the 'pull request' button.  To run the tests, you first need to install the 
-'mocha' mocking library.
+the 'pull request' button.
 
-	$ gem install mocha
-
-Then you should be able to run the tests with a 'rake' command.  You can also
-run coverage tests with 'rake rcov' if you have rcov installed.
+Then you should be able to run the tests with a 'rake' command.  On ruby >= 1.9, a coverage report will be generated using simplecov. On ruby 1.8, use rcov instead: uncomment the relevant line in the Gemfile and use 'rake rcov'. 
 
 ### Developing Adapters
 
