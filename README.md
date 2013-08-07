@@ -44,7 +44,7 @@ Dependencies
 
 Quick Start
 ========================
-	$ gem install rack
+	$ bundle install
 	$ (edit config.ru to set git project path)
 	$ rackup --host 127.0.0.1 -p 8080 config.ru
 	$ git clone http://127.0.0.1:8080/schacon/grit.git 
@@ -72,7 +72,7 @@ pull-requests via GitHub.  You should include tests for whatever functionality
 you add.  Just fork this project, push your changes to your fork and click
 the 'pull request' button.
 
-Then you should be able to run the tests with a 'rake' command.  On ruby >= 1.9, a coverage report will be generated using simplecov. On ruby 1.8, use rcov instead: uncomment the relevant line in the Gemfile and use 'rake rcov'. 
+Run 'bundle install' to install development dependencies. Then you should be able to run the tests with a 'rake' command. On ruby >= 1.9, a coverage report will be generated using simplecov. On ruby 1.8, use rcov instead: uncomment the relevant line in the Gemfile and use 'rake rcov'. 
 
 ### Developing Adapters
 
