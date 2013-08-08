@@ -47,7 +47,7 @@ Quick Start
 	$ bundle install
 	$ (edit config.ru to set git project path)
 	$ rackup --host 127.0.0.1 -p 8080 config.ru
-	$ git clone http://127.0.0.1:8080/schacon/grit.git 
+	$ git clone http://127.0.0.1:8080/tests/example/test_repo/
 
 Adapters
 ========================
