@@ -10,8 +10,6 @@ module Grack
     
     attr_accessor :git, :dir
     
-    SEPS = Regexp.union(*[::File::SEPARATOR, ::File::ALT_SEPARATOR].compact) # Valid file seperator characters, borrowed from Rack::File
-    
     VALID_SERVICE_TYPES = ['upload-pack', 'receive-pack']
 
     SERVICES = [
@@ -48,13 +46,12 @@ module Grack
       @req = Rack::Request.new(env)
       
       cmd, path, @reqfile, @rpc = self.class.match_routing(@req)
-
+      
       return render_method_not_allowed if cmd == 'not_allowed'
       return render_not_found if !cmd
 
       self.dir = get_git_dir(path)
       return render_not_found if !dir
-
       self.method(cmd).call()
     end
 
@@ -188,7 +185,7 @@ module Grack
     def get_git_dir(path)
       root = get_project_root
       path = File.join(root, path)
-      return false if !is_subpath(File.expand_path(path), root)
+      return false if !is_subpath(File.expand_path(path), File.expand_path(root))
       if File.exists?(path) # TODO: check is a valid git directory
         return path
       end
