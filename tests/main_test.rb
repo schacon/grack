@@ -198,6 +198,26 @@ class GitHttpTest < Test::Unit::TestCase
     session.get "/test_repo/info/refs?service=git-upload-pack"
     assert_equal 404, session.last_response.status
   end
+  
+  def test_get_git_dir_sanity
+    app1 = App.new({:project_root => example, :adapter=>GitAdapter})
+    assert_equal true, !! app1.get_git_dir('/test_repo/.git/info/refs')
+    assert_equal false, app1.get_git_dir('/test_repo/.git/nonexistent')
+    secret_test_path = '../../../secret_repo/.git'
+    File.stubs(:exists?).with(File.join(example, secret_test_path)).returns(true)
+    assert_equal false, app1.get_git_dir(secret_test_path)
+  end
+  
+  def test_send_file_sanity
+    app1 = App.new({:project_root => example, :adapter=>GitAdapter})
+    app1.stubs(:dir).returns(File.join(example, 'test_repo','.git'))
+    res = app1.send_file('../../../../etc/passwd', nil)
+    assert_equal 403, res.first
+    res = app1.send_file('nonexistent', nil)
+    assert_equal 404, res.first
+    res = app1.send_file('info/refs', nil) {}
+    assert_equal 200, res.first
+  end
 
   private
 

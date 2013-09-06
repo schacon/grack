@@ -8,7 +8,9 @@ require File.join(File.dirname(__FILE__), 'git_adapter.rb')
 module Grack
   class App 
     
-    attr_accessor :git
+    attr_accessor :git, :dir
+    
+    SEPS = Regexp.union(*[::File::SEPARATOR, ::File::ALT_SEPARATOR].compact) # Valid file seperator characters, borrowed from Rack::File
     
     VALID_SERVICE_TYPES = ['upload-pack', 'receive-pack']
 
@@ -50,8 +52,8 @@ module Grack
       return render_method_not_allowed if cmd == 'not_allowed'
       return render_not_found if !cmd
 
-      @dir = get_git_dir(path)
-      return render_not_found if !@dir
+      self.dir = get_git_dir(path)
+      return render_not_found if !dir
 
       self.method(cmd).call()
     end
@@ -68,7 +70,7 @@ module Grack
       @res.status = 200
       @res["Content-Type"] = "application/x-git-%s-result" % @rpc
       @res.finish do
-        @git.send(git_cmd, @dir, {:msg => input}) do |pipe|
+        @git.send(git_cmd, dir, {:msg => input}) do |pipe|
           while !pipe.eof?
             block = pipe.read(8192) # 8K at a time
             @res.write block        # steam it to the client
@@ -82,7 +84,7 @@ module Grack
 
       if has_access(service_name)
         git_cmd = service_name == "upload-pack" ? :upload_pack : :receive_pack
-        refs = @git.send(git_cmd, @dir, {:advertise_refs =>true})
+        refs = @git.send(git_cmd, dir, {:advertise_refs =>true})
 
         @res = Rack::Response.new
         @res.status = 200
@@ -143,8 +145,9 @@ module Grack
 
     # some of this borrowed from the Rack::File implementation
     def send_file(reqfile, content_type)
-      reqfile = File.join(@dir, reqfile)
-      return render_not_found if !F.exists?(reqfile)
+      reqfile = F.expand_path(reqfile, dir)
+      return render_no_access if !is_subpath(reqfile, dir)
+      return render_not_found if !F.exists?(reqfile) || !F.readable?(reqfile)
 
       @res = Rack::Response.new
       @res.status = 200
@@ -170,10 +173,22 @@ module Grack
         @res.finish
       end
     end
+    
+    def is_subpath(path, checkpath)
+      path = Rack::Utils.unescape(path)
+      checkpath = Rack::Utils.unescape(checkpath)
+      checkpath.sub!(/\/+$/,'') # Remove trailing slashes from filepath
+      !!(/^#{checkpath}(\/|$)/ =~ path)
+    end
+    
+    def get_project_root
+      root = @config[:project_root] || Dir.pwd
+    end
 
     def get_git_dir(path)
-      root = @config[:project_root] || Dir.pwd
+      root = get_project_root
       path = File.join(root, path)
+      return false if !is_subpath(File.expand_path(path), root)
       if File.exists?(path) # TODO: check is a valid git directory
         return path
       end
@@ -218,7 +233,7 @@ module Grack
 
     def get_config_setting(service_name)
       service_name = service_name.gsub('-', '')
-      setting = @git.get_config_setting(@dir, "http.#{service_name}")
+      setting = @git.get_config_setting(dir, "http.#{service_name}")
       if service_name == 'uploadpack'
         return setting != 'false'
       else
@@ -235,7 +250,7 @@ module Grack
     end
 
     def update_server_info
-      @git.update_server_info(@dir)
+      @git.update_server_info(dir)
     end
 
     # --------------------------------------
