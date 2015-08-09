@@ -13,7 +13,7 @@ require './lib/git_adapter'
 class GitAdapterTest < Test::Unit::TestCase
   include Grack
   
-  GIT_RECEIVE_RESPONSE = "cb067e06bdf6e34d4abebf6cf2de85d65a52c65e refs/heads/master\000 report-status delete-refs side-band-64k quiet ofs-delta"
+  GIT_RECEIVE_RESPONSE = "cb067e06bdf6e34d4abebf6cf2de85d65a52c65e refs/heads/master\u0000report-status delete-refs side-band-64k quiet ofs-delta agent=git/"
   
   def git
     'git' # Path to git on test system
