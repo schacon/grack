@@ -68,6 +68,7 @@ module Grack
       @res["Content-Type"] = "application/x-git-%s-result" % @rpc
       @res.finish do
         @git.send(git_cmd, dir, {:msg => input}) do |pipe|
+          pipe.close_write
           while !pipe.eof?
             block = pipe.read(8192) # 8K at a time
             @res.write block        # steam it to the client
@@ -240,9 +241,9 @@ module Grack
 
     def read_body
       if @env["HTTP_CONTENT_ENCODING"] =~ /gzip/
-        input = Zlib::GzipReader.new(@req.body).read
+        Zlib::GzipReader.new(@req.body).read
       else
-        input = @req.body.read
+        @req.body.read
       end
     end
 

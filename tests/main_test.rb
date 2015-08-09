@@ -14,6 +14,12 @@ require './lib/grack'
 require './lib/git_adapter'
 require 'pp'
 
+class MockProcess
+  def close_write
+    true
+  end
+end
+
 class GitHttpTest < Test::Unit::TestCase
   include Rack::Test::Methods
   include Grack
