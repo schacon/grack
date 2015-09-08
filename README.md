@@ -1,5 +1,6 @@
-[![Gem Version](https://badge.fury.io/rb/grack.svg)](http://badge.fury.io/rb/grack)
 [![Dependency Status](https://gemnasium.com/schacon/grack.svg)](https://gemnasium.com/schacon/grack)
+
+**Note: the grack gem is now being developed further at [grackorg/grack](https://github.com/grackorg/grack). This repository will not be updated any longer.**
 
 Grack - Ruby/Rack Git Smart-HTTP Server Handler
 ===============================================
